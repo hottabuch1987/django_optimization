@@ -1,14 +1,18 @@
 from django.core.validators import MaxValueValidator
 from django.db import models
-
+from django.db.models.signals import post_delete
 
 from clients.models import Client
+from services.receivers import delete_cache_total_sum
 from .tasks import set_price, set_comment
 
 
 class Service(models.Model):
     name = models.CharField(max_length=50)
     full_price = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f'Name: {self.name}'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -34,7 +38,6 @@ class Plan(models.Model):
     discount_percent = models.PositiveIntegerField(default=0,
                                                    validators=[
                                                        MaxValueValidator(100)
-
                                                    ])
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -60,5 +63,15 @@ class Subscription(models.Model):
     price = models.PositiveIntegerField(default=0)
     comment = models.CharField(max_length=50, default='')
 
+    def __str__(self):
+        return f'Client: {self.client}; Service: {self.service}'
+
+    def save(self, *args, **kwargs):        # когда модель создается
+        creating = not bool(self.id)
+        result = super().save(*args, **kwargs)
+        if creating:
+            set_price.delay(self.id)
+        return result
 
 
+post_delete.connect(delete_cache_total_sum, sender=Subscription)
