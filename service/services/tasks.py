@@ -22,7 +22,7 @@ def set_price(subscription_id):
             annotated_price=F('service__full_price') -
                      F('service__full_price') * F('plan__discount_percent') / 100.00).first()
 
-        time.sleep(20)
+        time.sleep(2)
 
         subscription.price = subscription.annotated_price
         subscription.save()
@@ -39,7 +39,7 @@ def set_comment(subscription_id):
     # код перед трасакций
     with transaction.atomic():
 
-        time.sleep(27)
+        time.sleep(7)
 
         subscription = Subscription.objects.select_for_update().get(id=subscription_id)
 

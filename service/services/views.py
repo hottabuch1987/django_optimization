@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db.models import Prefetch, F, Sum
 from django.shortcuts import render
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from django.core.cache import cache
 from clients.models import Client
@@ -16,6 +17,7 @@ class SubscriptionView(ReadOnlyModelViewSet):
     )#.annotate(price=F('service__full_price') -
                      #F('service__full_price') * F('plan__discount_percent') / 100.00)
     serializer_class = SubscriptionSerializer
+    permission_classes = (IsAuthenticated,)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
